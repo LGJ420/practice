@@ -1,104 +1,133 @@
-let show = "";
-let board = [];
+/* ================================================================================ */
+// 버튼 객체
+class Button {
+    constructor(label, callback) {
+        this.label = label;
+        this.element = this.createButtonElement(label);
+        this.appendFunction(callback);
+    }
 
+    createButtonElement(label) {
+        let button = document.createElement("button");
+        button.textContent = label;
+        button.id = `id_${label}`;
+        document.body.appendChild(button);
+        return button;
+    }
 
-
-
-
-/* =============================================================================== */
-// 빈버튼 만들기
-function my_btn_create(text){
-    let btn = document.createElement("button");
-    let node = document.createTextNode(text);
-    btn.id = text;
-    btn.appendChild(node);
-    document.body.appendChild(btn);
+    appendFunction(callback) {
+        this.element.addEventListener("click", () => {
+            callback(this.label);
+        });
+    }
 }
 
 
-// 버튼에 기능붙이기
-function my_btn_append_func(text, callback){
-    document.getElementById(text).addEventListener("click",()=>{
-        callback(text);
-    })   
-};
 
 
+/* ================================================================================ */
+// 디스플레이 객체
+class Display {
+    constructor() {
+        this.element = this.createDisplayElement();
+    }
 
+    createDisplayElement() {
+        let display = document.createElement("div");
+        display.id = "show";
+        document.body.appendChild(display);
+        return display;
+    }
 
-
-
-
-/* =============================================================================== */
-// 버튼 기능모음집
-function my_bf_show_add(text){
-    show += text;
-    document.getElementById("show").innerHTML = show;
+    update(content) {
+        this.element.innerHTML = content;
+    }
 }
 
-function my_bf_result(){
-    try{
-        let result = eval(show);
-        if(result==undefined){
-            return;
+
+
+
+/* ================================================================================ */
+// 히스토리 객체
+class History {
+    constructor() {
+        this.entries = [];
+        this.element = this.createHistoryElement();
+    }
+
+    createHistoryElement() {
+        let history = document.createElement("div");
+        history.id = "history";
+        document.body.appendChild(history);
+        return history;
+    }
+
+    add(entry) {
+        this.entries.push(entry);
+        this.update();
+    }
+
+    update() {
+        this.element.innerHTML = this.entries.map(e => `${e.expression} = ${e.result}`).join("<br>");
+    }
+}
+
+
+
+
+/* ================================================================================ */
+// 계산기 객체
+class Calculator {
+    constructor() {
+        this.display = new Display();
+        this.history = new History();
+        this.currentInput = "";
+        this.defaultButtons = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "+", "-", "*", "/", "(", ")"];
+        this.initButtons();
+    }
+
+    initButtons() {
+        this.defaultButtons.forEach(label => {
+            new Button(label, this.addToCurrentInput.bind(this));
+        });
+
+        new Button("=", this.calculateResult.bind(this));
+        new Button("<", this.removeLastCharacter.bind(this));
+        new Button("C", this.clearInput.bind(this));
+    }
+
+    addToCurrentInput(label) {
+        this.currentInput += label;
+        this.display.update(this.currentInput);
+    }
+
+    calculateResult() {
+        try {
+            let result = eval(this.currentInput);
+            if (result == undefined) {
+                return;
+            }
+            this.history.add({
+                expression: this.currentInput,
+                result: result
+            });
+            this.currentInput = "";
+            this.display.update(result);
+        } catch (e) {
+            this.currentInput = "";
+            this.display.update("ERROR");
         }
-        board.push(show);
-        show = "";
-        document.getElementById("show").innerHTML = result;
-        document.getElementById("history").innerHTML += board[board.length-1] + " = " + result + "<br>";
     }
-    catch(e){
-        show = "";
-        document.getElementById("show").innerHTML = "ERROR";
-        return;
+
+    removeLastCharacter() {
+        this.currentInput = this.currentInput.slice(0, -1);
+        this.display.update(this.currentInput);
+    }
+
+    clearInput() {
+        this.currentInput = "";
+        this.display.update(this.currentInput);
     }
 }
 
-function my_bf_clear(){
-    show = "";
-    document.getElementById("show").innerHTML = show;
-}
-
-function my_bf_remove(){
-    let arr = Array.from(show); 
-    arr.splice(-1);
-    show = arr.join('');
-    document.getElementById("show").innerHTML = show;
-}
-
-
-
-
-
-
-
-
-
-/* =============================================================================== */
-// 디폴트 버튼
-let i_wanna_default = ["0","1","2","3","4","5","6","7","8","9","+","-","*","/","(",")"];
-
-for(let item of i_wanna_default){
-    my_btn_create(item);
-    my_btn_append_func(item, my_bf_show_add);
-}
-
-
-
-
-
-
-
-
-
-
-/* =============================================================================== */
-my_btn_create("=");
-my_btn_append_func("=", my_bf_result);
-
-my_btn_create("<");
-my_btn_append_func("<", my_bf_remove);
-
-my_btn_create("C");
-my_btn_append_func("C", my_bf_clear);
-
+const calculator = new Calculator();

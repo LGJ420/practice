@@ -10,7 +10,7 @@ let board = [];
 function my_btn_create(text){
     let btn = document.createElement("button");
     let node = document.createTextNode(text);
-    btn.id = text;
+    btn.id = "id_" + text;
     btn.appendChild(node);
     document.body.appendChild(btn);
 }
@@ -18,7 +18,7 @@ function my_btn_create(text){
 
 // 버튼에 기능붙이기
 function my_btn_append_func(text, callback){
-    document.getElementById(text).addEventListener("click",()=>{
+    document.getElementById("id_"+text).addEventListener("click",()=>{
         callback(text);
     })   
 };
